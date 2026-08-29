@@ -56,6 +56,8 @@ scoreBox.setProperties(font=("Arial", 32, "normal"))
 win.bind_key('Left', moveLeft)
 win.bind_key('Right', moveRight)
 
-
 createApple()
+
+# Keep the window open and process animations/keyboard input.
+lu.tk.mainloop()
 
