@@ -25,17 +25,17 @@ BLACK = (0, 0, 0)
 # Load images
 # -----------------------------
 
-apple_image = pygame.image.load("apple.png").convert_alpha()
-apple_image = pygame.transform.scale(apple_image, (35, 35))
+apple_image = pygame.image.load("Images/apple.png").convert_alpha()
+apple_image = pygame.transform.scale(apple_image, (21, 25))
 
-splat_image = pygame.image.load("apple2.png").convert_alpha()
-splat_image = pygame.transform.scale(splat_image, (35, 35))
+splat_image = pygame.image.load("Images/apple2.png").convert_alpha()
+splat_image = pygame.transform.scale(splat_image, (21, 16))
 
-tree_image = pygame.image.load("apple_tree.png").convert_alpha()
-tree_image = pygame.transform.scale(tree_image, (150, 180))
+tree_image = pygame.image.load("Images/apple_tree.png").convert_alpha()
+tree_image = pygame.transform.scale(tree_image, (285, 345))
 
 # -----------------------------
-# Bucket
+# Bucket1
 # -----------------------------
 
 bucket = pygame.Rect(480, 395, 75, 60)
@@ -45,6 +45,7 @@ bucket = pygame.Rect(480, 395, 75, 60)
 # -----------------------------
 
 apples = []
+splats = []
 
 APPLE_EVENT = pygame.USEREVENT + 1
 pygame.time.set_timer(APPLE_EVENT, 1000)
@@ -124,14 +125,11 @@ while running:
             else:
                 score -= 1
 
-                # Draw a splat briefly
-                splat_rect = splat_image.get_rect(
-                    center=apple["rect"].center
-                )
+                # Store splat position
+                splat_rect = splat_image.get_rect(center=apple["rect"].center)
+                splats.append(splat_rect)
 
-                screen.blit(splat_image, splat_rect)
-
-            # Remove apple
+            # Remove apple (once, after the if/else)
             apples.remove(apple)
 
     # -------------------------
@@ -139,6 +137,10 @@ while running:
     # -------------------------
 
     screen.fill(POWDER_BLUE)
+
+    # Draw splats
+    for splat_rect in splats:
+        screen.blit(splat_image, splat_rect)
 
     # Ground
     pygame.draw.rect(
