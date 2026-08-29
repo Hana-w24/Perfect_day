@@ -1,63 +1,198 @@
-import lucid as lu
-from random import randint
+import pygame
+import random
 
-def moveLeft(e):
-    if bucket.x > 5:
-        bucket.x -= 30
+# -----------------------------
+# Setup
+# -----------------------------
 
-def moveRight(e):
-    if bucket.x < 1160:
-        bucket.x += 30
+pygame.init()
 
-def dropApple(apple):
-    apple.move(0,3)
-    drop = win.after(80, lambda: dropApple(apple))
-    x,y = apple.getXY()
-    if y > 560:
-        win.after_cancel(drop)
-        apple.undraw()
-        global score
-        if bucket.x < x < bucket.x+100:
-            score+=1
-        else:
-            score -= 1
-            splat = lu.Image(win, x, y, "Images/apple2.png")
-        scoreBox.setText("Score: " + str(score))
+WIDTH = 945
+HEIGHT = 540
 
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Apple Game")
 
+clock = pygame.time.Clock()
 
-def createApple():
-    tree = randint(1,2)
-       
-    if tree == 1:
-        x = randint(150, 400)
-        y = randint(100,230)
-    else:
-        x = randint(850, 1100)
-        y = randint(100, 230)
-    apple = lu.Image(win, x, y, "Images/apple.png")
-    win.after(2000, lambda: createApple())
-    win.after(1000, lambda: dropApple(apple))
+# Colours
+POWDER_BLUE = (176, 224, 230)
+LAWN_GREEN = (124, 252, 0)
+BROWN = (139, 69, 19)
+BLACK = (0, 0, 0)
 
+# -----------------------------
+# Load images
+# -----------------------------
 
-   
-win = lu.Window("Apple Game", 1260, 720)
-win.bg = "skyblue"
-ground = lu.Rectangle(win, 0, 400, 1280, 320)
-ground.fill = "lawngreen"
-ground.outline = "lawngreen"
-tree1 = lu.Image(win, 280, 280, "Images/apple_tree.png")
-tree2 = lu.Image(win, 980, 280, "Images/apple_tree.png")
-bucket = lu.Rectangle(win, 640, 540, 100, 80)
-bucket.fill = "brown"
+apple_image = pygame.image.load("apple.png").convert_alpha()
+apple_image = pygame.transform.scale(apple_image, (35, 35))
+
+splat_image = pygame.image.load("apple2.png").convert_alpha()
+splat_image = pygame.transform.scale(splat_image, (35, 35))
+
+tree_image = pygame.image.load("apple_tree.png").convert_alpha()
+tree_image = pygame.transform.scale(tree_image, (150, 180))
+
+# -----------------------------
+# Bucket
+# -----------------------------
+
+bucket = pygame.Rect(480, 395, 75, 60)
+
+# -----------------------------
+# Apples
+# -----------------------------
+
+apples = []
+
+APPLE_EVENT = pygame.USEREVENT + 1
+pygame.time.set_timer(APPLE_EVENT, 1000)
+
+# -----------------------------
+# Score
+# -----------------------------
+
 score = 0
-scoreBox = lu.Text(win, 645, 120, "Score: 0")
-scoreBox.setProperties(font=("Arial", 32, "normal"))
-win.bind_key('Left', moveLeft)
-win.bind_key('Right', moveRight)
+font = pygame.font.SysFont("Arial", 24)
 
-createApple()
+# -----------------------------
+# Main game loop
+# -----------------------------
 
-# Keep the window open and process animations/keyboard input.
-lu.tk.mainloop()
+running = True
 
+while running:
+
+    # -------------------------
+    # Events
+    # -------------------------
+
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            running = False
+
+        # Create a new apple every second
+        if event.type == APPLE_EVENT:
+
+            tree = random.randint(1, 2)
+
+            if tree == 1:
+                x = random.randint(113, 300)
+                y = random.randint(75, 173)
+            else:
+                x = random.randint(638, 825)
+                y = random.randint(75, 173)
+
+            apple_rect = apple_image.get_rect(topleft=(x, y))
+
+            apples.append({
+                "rect": apple_rect,
+                "speed": 5
+            })
+
+    # -------------------------
+    # Keyboard controls
+    # -------------------------
+
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_LEFT]:
+        if bucket.x > 7:
+            bucket.x -= 20
+
+    if keys[pygame.K_RIGHT]:
+        if bucket.x < 877:
+            bucket.x += 20
+
+    # -------------------------
+    # Move apples
+    # -------------------------
+
+    for apple in apples[:]:
+
+        apple["rect"].y += apple["speed"]
+
+        # Apple reaches bucket/ground
+        if apple["rect"].y > 395:
+
+            # Check whether bucket catches the apple
+            if bucket.colliderect(apple["rect"]):
+                score += 1
+
+            else:
+                score -= 1
+
+                # Draw a splat briefly
+                splat_rect = splat_image.get_rect(
+                    center=apple["rect"].center
+                )
+
+                screen.blit(splat_image, splat_rect)
+
+            # Remove apple
+            apples.remove(apple)
+
+    # -------------------------
+    # Draw background
+    # -------------------------
+
+    screen.fill(POWDER_BLUE)
+
+    # Ground
+    pygame.draw.rect(
+        screen,
+        LAWN_GREEN,
+        (0, 300, WIDTH, 240)
+    )
+
+    # Trees
+    screen.blit(tree_image, (210, 210))
+    screen.blit(tree_image, (735, 210))
+
+    # -------------------------
+    # Draw apples
+    # -------------------------
+
+    for apple in apples:
+        screen.blit(
+            apple_image,
+            apple["rect"]
+        )
+
+    # -------------------------
+    # Draw bucket
+    # -------------------------
+
+    pygame.draw.rect(
+        screen,
+        BROWN,
+        bucket
+    )
+
+    # -------------------------
+    # Draw score
+    # -------------------------
+
+    score_text = font.render(
+        "Score: " + str(score),
+        True,
+        BLACK
+    )
+
+    screen.blit(
+        score_text,
+        (484, 90)
+    )
+
+    # -------------------------
+    # Update screen
+    # -------------------------
+
+    pygame.display.flip()
+
+    clock.tick(60)
+
+
+pygame.quit()
